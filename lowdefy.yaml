@@ -1,0 +1,126 @@
+lowdefy: 3.19.0
+name: Lowdefy starter
+
+connections:
+  - id: backend
+    type: AxiosHttp
+    properties:
+      baseURL: http://localhost:8080/api/v1
+      responseType: json
+      timeout: 1000
+
+# TODO
+# - show this at work, ask for time to spend a day and finish it
+# - commit to git while it works!
+# - context block for each endpoint with its get request and onEnterPressed + Save button
+# - save all button at the bottom
+# - get Swag outputting body JSON schemata
+# - each context block / endpoint to bind to the body object - if one field then just one TextInput, but maybe several. If it's a deep object, have child controls (see https://docs.lowdefy.com/TextInput fow what it should look like - find source of this)
+
+pages:
+  - id: config
+    type: Context
+    layout:
+      contentAlign: center
+    properties:
+      title: Config
+    requests:
+      - id: get_health
+        type: AxiosHttp
+        connectionId: backend
+        properties:
+          url: /health
+          method: get
+      - id: get_ready
+        type: AxiosHttp
+        connectionId: backend
+        properties:
+          url: /ready
+          method: get
+      - id: set_health
+        type: AxiosHttp
+        connectionId: backend
+        properties:
+          url: /health
+          method: post
+          data:
+            # _state: true
+            health:
+              _state: health
+      - id: set_ready
+        type: AxiosHttp
+        connectionId: backend
+        properties:
+          url: /ready
+          method: post
+          data:
+            # _state: true
+            ready:
+              _state: ready
+    events:
+      onInitAsync:
+        - id: get_all
+          type: Request
+          params:
+            - get_health
+            - get_ready
+          messages:
+            error: true
+            loading: true
+        - id: init
+          type: SetState
+          params:
+            _request: get_health.data
+        - id: init
+          type: SetState
+          params:
+            _request: get_ready.data
+    blocks:
+      - id: content
+        type: Box
+        style:
+          maxWidth: 660
+          padding: 30px 30px 60px 30px
+          minHeight: 90vh
+          background: '#fff'
+        layout:
+          contentGutter: 20
+        blocks:
+          - id: health
+            type: TextInput
+            required: true
+            properties:
+              title: Health
+              label:
+                inline: true
+              placeholder: string
+          - id: ready
+            type: TextInput
+            required: true
+            properties:
+              title: Readiness
+              label:
+                inline: true
+              placeholder: string
+          - id: save
+            type: Button
+            properties:
+              title: Save All
+              icon: SaveOutlined
+              block: true
+            events:
+              onClick:
+                - id: save_health
+                  type: Request
+                  params: set_health
+                  messages:
+                    loading: true
+                    error: true
+                    success: true
+                - id: save_ready
+                  type: Request
+                  params: set_ready
+                  messages:
+                    loading: true
+                    error: true
+                    success: true
